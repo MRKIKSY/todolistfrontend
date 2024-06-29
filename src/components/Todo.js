@@ -16,10 +16,10 @@ function Todo() {
     useEffect(() => {
         axios.get('https://todolistbackend-1-gm2y.onrender.com/getTodoList')
             .then(result => {
-                setTodoList(result.data)
+                setTodoList(result.data);
             })
-            .catch(err => console.log(err))
-    }, [])
+            .catch(err => console.log(err));
+    }, []);
 
     // Function to toggle the editable state for a specific row
     const toggleEditable = (id) => {
@@ -37,7 +37,6 @@ function Todo() {
         }
     };
 
-
     // Function to add task to the database
     const addTask = (e) => {
         e.preventDefault();
@@ -48,11 +47,13 @@ function Todo() {
 
         axios.post('https://todolistbackend-1-gm2y.onrender.com/addTodoList', { task: newTask, status: newStatus, deadline: newDeadline })
             .then(res => {
-                console.log(res);
-                window.location.reload();
+                setTodoList([...todoList, res.data]);
+                setNewTask("");
+                setNewStatus("");
+                setNewDeadline("");
             })
             .catch(err => console.log(err));
-    }
+    };
 
     // Function to save edited data to the database
     const saveEditedTask = (id) => {
@@ -62,37 +63,34 @@ function Todo() {
             deadline: editedDeadline,
         };
 
-        // If the fields are empty
         if (!editedTask || !editedStatus || !editedDeadline) {
             alert("All fields must be filled out.");
             return;
         }
 
-        // Updating edited data to the database through updateById API
         axios.post('https://todolistbackend-1-gm2y.onrender.com/updateTodoList/' + id, editedData)
             .then(result => {
-                console.log(result);
+                const updatedList = todoList.map((item) =>
+                    item._id === id ? { ...item, ...editedData } : item
+                );
+                setTodoList(updatedList);
                 setEditableId(null);
                 setEditedTask("");
                 setEditedStatus("");
-                setEditedDeadline(""); // Clear the edited deadline
-                window.location.reload();
+                setEditedDeadline("");
             })
             .catch(err => console.log(err));
-    }
+    };
 
-
-    // Delete task from database
+    // Function to delete task from the database
     const deleteTask = (id) => {
         axios.delete('https://todolistbackend-1-gm2y.onrender.com/deleteTodoList/' + id)
             .then(result => {
-                console.log(result);
-                window.location.reload();
+                const updatedList = todoList.filter((item) => item._id !== id);
+                setTodoList(updatedList);
             })
-            .catch(err =>
-                console.log(err)
-            )
-    }
+            .catch(err => console.log(err));
+    };
 
     return (
         <div className="container mt-5">
@@ -149,7 +147,6 @@ function Todo() {
                                                     data.deadline ? new Date(data.deadline).toLocaleString() : ''
                                                 )}
                                             </td>
-
                                             <td>
                                                 {editableId === data._id ? (
                                                     <button className="btn btn-success btn-sm" onClick={() => saveEditedTask(data._id)}>
@@ -170,24 +167,23 @@ function Todo() {
                             ) : (
                                 <tbody>
                                     <tr>
-                                        <td colSpan="4">Loading products...</td>
+                                        <td colSpan="4">Loading tasks...</td>
                                     </tr>
                                 </tbody>
                             )}
-
-
                         </table>
                     </div>
                 </div>
                 <div className="col-md-5">
                     <h2 className="text-center">Add Task</h2>
-                    <form className="bg-light p-4">
+                    <form className="bg-light p-4" onSubmit={addTask}>
                         <div className="mb-3">
                             <label>Task</label>
                             <input
                                 className="form-control"
                                 type="text"
                                 placeholder="Enter Task"
+                                value={newTask}
                                 onChange={(e) => setNewTask(e.target.value)}
                             />
                         </div>
@@ -197,6 +193,7 @@ function Todo() {
                                 className="form-control"
                                 type="text"
                                 placeholder="Enter Status"
+                                value={newStatus}
                                 onChange={(e) => setNewStatus(e.target.value)}
                             />
                         </div>
@@ -205,17 +202,17 @@ function Todo() {
                             <input
                                 className="form-control"
                                 type="datetime-local"
+                                value={newDeadline}
                                 onChange={(e) => setNewDeadline(e.target.value)}
                             />
                         </div>
-                        <button onClick={addTask} className="btn btn-success btn-sm">
+                        <button type="submit" className="btn btn-success btn-sm">
                             Add Task
                         </button>
                     </form>
                 </div>
-
             </div>
         </div>
-    )
+    );
 }
 export default Todo;
